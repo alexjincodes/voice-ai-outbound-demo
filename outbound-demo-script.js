@@ -9,10 +9,23 @@ let PHONE_CONFIG = {
   phoneNumberId: ''
 };
 
+// Demo mode flag
+let isDemoMode = false;
+
 // Load configuration from server
 async function loadConfig() {
   try {
-    const response = await fetch('/api/config');
+    const response = await fetch('/api/config', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
     const config = await response.json();
     
     VAPI_CONFIG = {
@@ -29,7 +42,6 @@ async function loadConfig() {
     return true;
   } catch (error) {
     console.error('Failed to load configuration:', error);
-    addLogEntry('Error loading configuration - check server connection');
     return false;
   }
 }
@@ -98,15 +110,18 @@ function validateForm() {
 }
 
 async function createVAPIAssistant() {
+  const agentName = agentNameInput.value.trim() || 'AI Assistant';
+  const agentDesc = agentDescriptionInput.value.trim() || 'A helpful AI assistant';
+  
   const assistantData = {
-    name: agentNameInput.value.trim(),
+    name: agentName,
     model: {
       provider: "openai",
       model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system",
-          content: `You are ${agentNameInput.value.trim()}. ${agentDescriptionInput.value.trim()}`
+          content: `You are ${agentName}. ${agentDesc}`
         }
       ]
     },
@@ -114,10 +129,12 @@ async function createVAPIAssistant() {
       provider: "11labs",
       voiceId: "paula"
     },
-    firstMessage: `Hello! This is ${agentNameInput.value.trim()}. How can I help you today?`
+    firstMessage: `Hello! This is ${agentName}. How can I help you today?`
   };
 
   try {
+    addLogEntry('Creating custom AI assistant...');
+    
     const response = await fetch(`${VAPI_CONFIG.baseUrl}/assistant`, {
       method: 'POST',
       headers: {
@@ -128,14 +145,16 @@ async function createVAPIAssistant() {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`VAPI Assistant creation failed: ${response.status} ${response.statusText} - ${errorText}`);
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      const errorMsg = errorData.message || errorData.error || response.statusText;
+      throw new Error(`Assistant creation failed (${response.status}): ${errorMsg}`);
     }
 
     const result = await response.json();
     addLogEntry('AI Assistant created successfully');
     return result.id;
   } catch (error) {
+    console.error('Assistant creation error:', error);
     addLogEntry(`Error creating assistant: ${error.message}`);
     throw error;
   }
@@ -151,9 +170,8 @@ async function initiateVAPICall(assistantId, phoneNumber) {
     }
   };
 
-  console.log('Making VAPI call with data:', callData);
-  console.log('API endpoint:', `${VAPI_CONFIG.baseUrl}/call`);
-  addLogEntry(`Debug: Calling ${phoneNumber} using assistant ${assistantId}`);
+  addLogEntry(`Initiating call to ${phoneNumber}`);
+  addLogEntry(`Using assistant: ${assistantId.substring(0, 8)}...`);
 
   try {
     const response = await fetch(`${VAPI_CONFIG.baseUrl}/call`, {
@@ -165,35 +183,33 @@ async function initiateVAPICall(assistantId, phoneNumber) {
       body: JSON.stringify(callData)
     });
 
-    console.log('Response status:', response.status);
-    console.log('Response headers:', response.headers);
-
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('API Error Response:', errorText);
-      throw new Error(`VAPI Call initiation failed: ${response.status} ${response.statusText} - ${errorText}`);
+      const errorData = await response.json().catch(() => ({ error: 'Network error' }));
+      const errorMsg = errorData.message || errorData.error || response.statusText;
+      
+      if (response.status === 401) {
+        throw new Error('Invalid VAPI API key - check configuration');
+      } else if (response.status === 400) {
+        throw new Error(`Invalid request: ${errorMsg}`);
+      } else if (response.status === 429) {
+        throw new Error('Rate limit exceeded - please try again later');
+      } else {
+        throw new Error(`Call failed (${response.status}): ${errorMsg}`);
+      }
     }
 
     const result = await response.json();
-    console.log('Success response:', result);
-    addLogEntry('Outbound call initiated');
+    addLogEntry('Outbound call initiated successfully');
     return result;
   } catch (error) {
-    console.error('Call error:', error);
-    addLogEntry(`Error initiating call: ${error.message}`);
+    console.error('Call initiation error:', error);
+    addLogEntry(`Call initiation failed: ${error.message}`);
     throw error;
   }
 }
 
 async function initiateOutboundCall() {
   if (!validateForm()) return;
-
-  // Load configuration first
-  const configLoaded = await loadConfig();
-  if (!configLoaded) {
-    updateStatus('error', 'Configuration failed');
-    return;
-  }
 
   // Disable button to prevent multiple clicks
   startCallBtn.disabled = true;
@@ -206,26 +222,42 @@ async function initiateOutboundCall() {
     addLogEntry(`Target number: ${phoneNumberInput.value.trim()}`);
     addLogEntry(`Call objective: ${agentGoalSelect.value}`);
 
-    // Real implementation - Making actual VAPI calls
-    let assistantId = VAPI_CONFIG.assistantId;
-    
-    // If no pre-configured assistant ID, create a new one
-    if (!assistantId) {
-      assistantId = await createVAPIAssistant();
+    if (isDemoMode) {
+      // Demo mode - simulation
+      addLogEntry('🎭 Running demonstration (VAPI not configured)');
+      await simulateCallProcess();
     } else {
-      addLogEntry('Using pre-configured assistant');
-    }
-    
-    const callResult = await initiateVAPICall(assistantId, phoneNumberInput.value.trim());
+      // Real VAPI implementation
+      addLogEntry('🚀 Making real VAPI call');
+      
+      let assistantId = VAPI_CONFIG.assistantId;
+      
+      // If no pre-configured assistant ID, create a new one
+      if (!assistantId) {
+        assistantId = await createVAPIAssistant();
+      } else {
+        addLogEntry('Using pre-configured assistant');
+      }
+      
+      const callResult = await initiateVAPICall(assistantId, phoneNumberInput.value.trim());
 
-    updateStatus('connected', 'Call in progress...');
-    addLogEntry(`Call ID: ${callResult.id}`);
-    addLogEntry('Monitoring call status...');
-    monitorCallStatus(callResult.id);
+      updateStatus('connected', 'Call in progress...');
+      addLogEntry(`Call ID: ${callResult.id}`);
+      addLogEntry('Monitoring call status...');
+      monitorCallStatus(callResult.id);
+    }
   } catch (error) {
     updateStatus('error', 'Call failed');
     addLogEntry(`Call failed: ${error.message}`);
     console.error('Call error:', error);
+    
+    // Fall back to demo mode on error only if we were trying real calls
+    if (!isDemoMode) {
+      addLogEntry('⚠️ Falling back to demonstration mode');
+      setTimeout(async () => {
+        await simulateCallProcess();
+      }, 2000);
+    }
   } finally {
     setTimeout(() => {
       startCallBtn.disabled = false;
@@ -236,10 +268,13 @@ async function initiateOutboundCall() {
 
 // Simulate call process for demo purposes
 async function simulateCallProcess() {
+  const agentName = agentNameInput.value.trim() || 'Agent';
+  const phoneNumber = phoneNumberInput.value.trim();
+  
   return new Promise((resolve) => {
     setTimeout(() => {
       updateStatus('calling', 'Dialing number...');
-      addLogEntry('Dialing target number');
+      addLogEntry(`Dialing ${phoneNumber}`);
     }, 1000);
 
     setTimeout(() => {
@@ -248,21 +283,25 @@ async function simulateCallProcess() {
     }, 3000);
 
     setTimeout(() => {
-      addLogEntry('AI: Hello! This is Sarah from ABC Company...');
+      addLogEntry(`AI (${agentName}): Hello! This is ${agentName}. How can I help you today?`);
     }, 4000);
 
     setTimeout(() => {
-      addLogEntry('Customer response detected');
-    }, 7000);
+      addLogEntry('Customer: Hi, I received a call from you...');
+    }, 6000);
 
     setTimeout(() => {
-      addLogEntry('AI: I understand. Let me help you with that...');
+      addLogEntry(`AI (${agentName}): I understand. Let me help you with that...`);
     }, 8000);
 
     setTimeout(() => {
+      addLogEntry('Customer: That sounds interesting, tell me more.');
+    }, 10000);
+
+    setTimeout(() => {
       updateStatus('idle', 'Call completed');
-      addLogEntry('Call ended - Duration: 2:34');
-      addLogEntry('Call summary: Successful contact, follow-up scheduled');
+      addLogEntry('Call ended - Duration: 2:47');
+      addLogEntry('Call summary: Successful contact, customer interested');
       resolve();
     }, 12000);
   });
@@ -309,7 +348,25 @@ async function monitorCallStatus(callId) {
 }
 
 // Initialize the page
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
   addLogEntry('Outbound Agent Demo ready');
   updatePreview();
+  
+  // Add event listener for the start call button
+  if (startCallBtn) {
+    startCallBtn.addEventListener('click', initiateOutboundCall);
+    console.log('Button event listener added');
+  } else {
+    console.error('Start call button not found');
+  }
+  
+  // Try to load configuration on startup
+  const configLoaded = await loadConfig();
+  if (configLoaded && VAPI_CONFIG.apiKey && PHONE_CONFIG.phoneNumberId) {
+    addLogEntry('✅ VAPI configuration loaded - Real calls enabled');
+    isDemoMode = false;
+  } else {
+    addLogEntry('⚠️  VAPI not configured - Demo mode enabled');
+    isDemoMode = true;
+  }
 });
