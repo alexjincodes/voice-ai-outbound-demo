@@ -1,11 +1,32 @@
 // Professional Call Analytics Dashboard JavaScript
 
-// Configuration - Update with your VAPI credentials
-const DASHBOARD_CONFIG = {
-    vapiApiKey: '9a26f651-d163-48fe-97f1-69e534282719', // Your VAPI private key
+// Configuration - Loaded from server
+let DASHBOARD_CONFIG = {
+    vapiApiKey: '',
     vapiBaseUrl: 'https://api.vapi.ai',
+    vapiAssistantId: '',
+    vapiPhoneNumberId: '',
     refreshInterval: 30000 // 30 seconds
 };
+
+// Load configuration from server
+async function loadDashboardConfig() {
+    try {
+        const response = await fetch('/api/config');
+        const config = await response.json();
+        
+        DASHBOARD_CONFIG.vapiApiKey = config.vapi.apiKey;
+        DASHBOARD_CONFIG.vapiBaseUrl = config.vapi.baseUrl;
+        DASHBOARD_CONFIG.vapiAssistantId = config.vapi.assistantId;
+        DASHBOARD_CONFIG.vapiPhoneNumberId = config.vapi.phoneNumberId;
+        
+        console.log('Dashboard configuration loaded successfully');
+        return true;
+    } catch (error) {
+        console.error('Failed to load dashboard configuration:', error);
+        return false;
+    }
+}
 
 // Global state
 let callsData = [];
@@ -31,8 +52,15 @@ const callModal = document.getElementById('callModal');
 const refreshBtn = document.getElementById('refreshData');
 
 // Initialize Dashboard
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     console.log('Dashboard initializing...');
+    
+    // Load configuration first
+    const configLoaded = await loadDashboardConfig();
+    if (!configLoaded) {
+        showToast('Failed to load configuration', 'error');
+    }
+    
     initializeDashboard();
     setupEventListeners();
     loadCallData();
@@ -1055,7 +1083,7 @@ async function makeVAPICampaignCall(campaign, contact) {
     // Initiate call
     const callData = {
         assistantId: assistant.id,
-        phoneNumberId: '59364f07-5295-4cab-ac4c-f2f3af95d1d5', // Your phone number ID
+        phoneNumberId: DASHBOARD_CONFIG.vapiPhoneNumberId,
         customer: {
             number: contact.phone
         }

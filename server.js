@@ -67,11 +67,17 @@ app.get('/health', (req, res) => {
     });
 });
 
-// API endpoint to serve configuration (without sensitive data)
+// API endpoint to serve VAPI configuration
 app.get('/api/config', (req, res) => {
     res.json({
         environment: process.env.NODE_ENV || 'development',
         version: '1.0.0',
+        vapi: {
+            apiKey: process.env.VAPI_API_KEY || '9a26f651-d163-48fe-97f1-69e534282719',
+            baseUrl: 'https://api.vapi.ai',
+            assistantId: process.env.VAPI_ASSISTANT_ID || '4f3a7283-fdd0-46bf-838b-a5258376c41b',
+            phoneNumberId: process.env.VAPI_PHONE_NUMBER_ID || '59364f07-5295-4cab-ac4c-f2f3af95d1d5'
+        },
         features: {
             outboundCalling: true,
             bulkCalling: true,

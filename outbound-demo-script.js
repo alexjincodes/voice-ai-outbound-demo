@@ -1,15 +1,38 @@
-// VAPI Configuration - Replace with your actual VAPI credentials
-const VAPI_CONFIG = {
-  apiKey: '9a26f651-d163-48fe-97f1-69e534282719', // Use PRIVATE key for outbound calls (WARNING: Not secure in frontend!)
-  baseUrl: 'https://api.vapi.ai', // Standard VAPI base URL
-  assistantId: '4f3a7283-fdd0-46bf-838b-a5258376c41b' // Replace with your actual assistant ID (if you already have one)
+// VAPI Configuration - Loaded from server
+let VAPI_CONFIG = {
+  apiKey: '',
+  baseUrl: 'https://api.vapi.ai',
+  assistantId: ''
 };
 
-// Phone Number Configuration
-// NOTE: Use the UUID/ID of your phone number from VAPI dashboard, not the actual phone number
-const PHONE_CONFIG = {
-  phoneNumberId: '59364f07-5295-4cab-ac4c-f2f3af95d1d5' // Replace with the UUID of your connected Twilio number from VAPI dashboard
+let PHONE_CONFIG = {
+  phoneNumberId: ''
 };
+
+// Load configuration from server
+async function loadConfig() {
+  try {
+    const response = await fetch('/api/config');
+    const config = await response.json();
+    
+    VAPI_CONFIG = {
+      apiKey: config.vapi.apiKey,
+      baseUrl: config.vapi.baseUrl,
+      assistantId: config.vapi.assistantId
+    };
+    
+    PHONE_CONFIG = {
+      phoneNumberId: config.vapi.phoneNumberId
+    };
+    
+    console.log('Configuration loaded successfully');
+    return true;
+  } catch (error) {
+    console.error('Failed to load configuration:', error);
+    addLogEntry('Error loading configuration - check server connection');
+    return false;
+  }
+}
 
 // DOM Elements
 const agentNameInput = document.getElementById('agentName');
@@ -164,6 +187,13 @@ async function initiateVAPICall(assistantId, phoneNumber) {
 
 async function initiateOutboundCall() {
   if (!validateForm()) return;
+
+  // Load configuration first
+  const configLoaded = await loadConfig();
+  if (!configLoaded) {
+    updateStatus('error', 'Configuration failed');
+    return;
+  }
 
   // Disable button to prevent multiple clicks
   startCallBtn.disabled = true;
