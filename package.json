@@ -1,0 +1,29 @@
+{
+  "name": "voice-ai-outbound-demo",
+  "version": "1.0.0",
+  "description": "Voice AI Outbound Agent Demo - Professional call management and bulk calling platform",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "voice-ai",
+    "outbound-calling",
+    "vapi",
+    "call-center",
+    "automated-calls"
+  ],
+  "author": "Your Company",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "compression": "^1.7.4"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}

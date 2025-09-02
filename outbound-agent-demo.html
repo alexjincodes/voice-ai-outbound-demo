@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice AI Assistant Demo - Outbound Agent</title>
+    <link rel="stylesheet" href="outbound-demo-styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Voice AI Assistant Demo</h1>
+            <p>Experience our intelligent outbound voice agent</p>
+        </header>
+        
+        <main>
+            <div class="demo-container">
+                <div class="agent-config">
+                    <h2>Configure Your Agent</h2>
+                    
+                    <div class="form-section">
+                        <label for="agentName">Agent Name</label>
+                        <input type="text" id="agentName" placeholder="e.g., Sales Assistant Sarah" required>
+                    </div>
+                    
+                    <div class="form-section">
+                        <label for="agentDescription">Context & Description</label>
+                        <textarea id="agentDescription" placeholder="Describe what your agent should know and how it should behave. For example: 'You are a friendly sales assistant for ABC Company. You help customers learn about our new product line and schedule appointments. Be professional but conversational.'" rows="6" required></textarea>
+                    </div>
+                    
+                    <div class="form-section">
+                        <label for="phoneNumber">Target Phone Number</label>
+                        <input type="tel" id="phoneNumber" placeholder="+1234567890" required>
+                    </div>
+                    
+                    <div class="form-section">
+                        <label for="agentGoal">Call Objective</label>
+                        <select id="agentGoal">
+                            <option value="lead_generation">Lead Generation</option>
+                            <option value="appointment_booking">Appointment Booking</option>
+                            <option value="customer_survey">Customer Survey</option>
+                            <option value="follow_up">Follow-up Call</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                    
+                    <button id="startCall" class="start-call-btn" onclick="initiateOutboundCall()">
+                        <span class="btn-text">Start Outbound Call</span>
+                        <span class="btn-icon">📞</span>
+                    </button>
+                </div>
+                
+                <div class="call-status">
+                    <h3>Call Status</h3>
+                    <div id="statusDisplay" class="status-idle">
+                        <div class="status-indicator"></div>
+                        <span>Ready to start call</span>
+                    </div>
+                    
+                    <div id="callLog" class="call-log">
+                        <h4>Call Log</h4>
+                        <div id="logContent">
+                            <p class="log-entry">Waiting for call to start...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="agent-preview">
+                <h3>Agent Preview</h3>
+                <div class="preview-card">
+                    <div class="agent-avatar">🤖</div>
+                    <div class="agent-info">
+                        <h4 id="previewName">Agent Name</h4>
+                        <p id="previewDescription">Agent description will appear here...</p>
+                        <div class="agent-capabilities">
+                            <span class="capability">Voice Recognition</span>
+                            <span class="capability">Natural Language</span>
+                            <span class="capability">Context Aware</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="outbound-demo-script.js"></script>
+</body>
+</html>

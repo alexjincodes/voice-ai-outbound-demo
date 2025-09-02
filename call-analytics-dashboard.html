@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Call Analytics Dashboard - Voice AI Platform</title>
+    <link rel="stylesheet" href="dashboard-styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <h1><i class="fas fa-phone-alt"></i> Voice AI Analytics</h1>
+                    <p>Professional Call Management Dashboard</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-primary" id="refreshData">
+                        <i class="fas fa-sync-alt"></i> Refresh Data
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <!-- Navigation Tabs -->
+            <nav class="dashboard-tabs">
+                <button class="tab-btn active" onclick="switchTab('analytics')">
+                    <i class="fas fa-chart-bar"></i> Analytics
+                </button>
+                <button class="tab-btn" onclick="switchTab('contacts')">
+                    <i class="fas fa-address-book"></i> Contact Lists
+                </button>
+                <button class="tab-btn" onclick="switchTab('campaigns')">
+                    <i class="fas fa-bullhorn"></i> Campaigns
+                </button>
+            </nav>
+
+            <!-- Analytics Tab -->
+            <div id="analyticsTab" class="tab-content active">
+                <!-- Stats Overview -->
+            <section class="stats-overview">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="totalCalls">0</h3>
+                            <p>Total Calls</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="avgDuration">0:00</h3>
+                            <p>Avg Duration</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="successRate">0%</h3>
+                            <p>Success Rate</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="todayCalls">0</h3>
+                            <p>Today's Calls</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Call Details Section -->
+            <section class="call-details-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-list"></i> Recent Calls</h2>
+                    <div class="filter-controls">
+                        <select id="statusFilter">
+                            <option value="all">All Status</option>
+                            <option value="completed">Completed</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                        <input type="date" id="dateFilter">
+                    </div>
+                </div>
+
+                <!-- Calls List -->
+                <div class="calls-list" id="callsList">
+                    <!-- Calls will be populated here -->
+                </div>
+            </section>
+            </div>
+
+            <!-- Contact Lists Tab -->
+            <div id="contactsTab" class="tab-content">
+                <section class="contacts-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-address-book"></i> Contact Lists</h2>
+                        <div class="contact-actions">
+                            <button class="btn-secondary" onclick="downloadTemplate()">
+                                <i class="fas fa-download"></i> Download Template
+                            </button>
+                            <button class="btn-primary" onclick="showUploadModal()">
+                                <i class="fas fa-upload"></i> Upload CSV
+                            </button>
+                            <button class="btn-primary" onclick="showAddContactModal()">
+                                <i class="fas fa-plus"></i> Add Contact
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Contact Lists Display -->
+                    <div class="contact-lists-grid" id="contactListsGrid">
+                        <!-- Contact lists will be populated here -->
+                    </div>
+
+                    <!-- Individual Contacts Table -->
+                    <div class="contacts-table-section" id="contactsTableSection" style="display: none;">
+                        <div class="section-header">
+                            <h3 id="contactListTitle">Contacts</h3>
+                            <div class="contact-table-actions">
+                                <button class="btn-secondary" onclick="goBackToLists()">
+                                    <i class="fas fa-arrow-left"></i> Back to Lists
+                                </button>
+                                <button class="btn-secondary" onclick="exportContacts()">
+                                    <i class="fas fa-file-export"></i> Export
+                                </button>
+                                <button class="btn-primary" onclick="startBulkCalling()">
+                                    <i class="fas fa-phone"></i> Start Bulk Calling
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="contacts-table-container">
+                            <table class="contacts-table" id="contactsTable">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" onchange="toggleAllContacts(this)"></th>
+                                        <th>Name</th>
+                                        <th>Phone</th>
+                                        <th>Email</th>
+                                        <th>Context</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="contactsTableBody">
+                                    <!-- Contacts will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Campaigns Tab -->
+            <div id="campaignsTab" class="tab-content">
+                <section class="campaigns-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-bullhorn"></i> Call Campaigns</h2>
+                        <button class="btn-primary" onclick="showCreateCampaignModal()">
+                            <i class="fas fa-plus"></i> Create Campaign
+                        </button>
+                    </div>
+
+                    <!-- Active Campaigns -->
+                    <div class="campaigns-grid" id="campaignsGrid">
+                        <!-- Campaigns will be populated here -->
+                    </div>
+
+                    <!-- Campaign Progress -->
+                    <div class="campaign-progress" id="campaignProgress" style="display: none;">
+                        <div class="progress-header">
+                            <h3 id="campaignTitle">Campaign Progress</h3>
+                            <div class="progress-actions">
+                                <button class="btn-secondary" onclick="pauseCampaign()" id="pauseBtn">
+                                    <i class="fas fa-pause"></i> Pause
+                                </button>
+                                <button class="btn-primary" onclick="stopCampaign()">
+                                    <i class="fas fa-stop"></i> Stop Campaign
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="progress-stats">
+                            <div class="progress-stat">
+                                <span class="stat-label">Total Contacts:</span>
+                                <span id="totalContacts">0</span>
+                            </div>
+                            <div class="progress-stat">
+                                <span class="stat-label">Called:</span>
+                                <span id="calledContacts">0</span>
+                            </div>
+                            <div class="progress-stat">
+                                <span class="stat-label">Successful:</span>
+                                <span id="successfulCalls">0</span>
+                            </div>
+                            <div class="progress-stat">
+                                <span class="stat-label">Failed:</span>
+                                <span id="failedCalls">0</span>
+                            </div>
+                        </div>
+
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                        </div>
+
+                        <div class="call-log-live" id="callLogLive">
+                            <!-- Live call updates will appear here -->
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- CSV Upload Modal -->
+            <div id="uploadModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2><i class="fas fa-upload"></i> Upload Contact List</h2>
+                        <span class="close" onclick="closeUploadModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <div class="upload-section">
+                            <div class="upload-area" id="uploadArea" ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
+                                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                                <p>Drag & drop your CSV file here or click to browse</p>
+                                <input type="file" id="csvFileInput" accept=".csv" onchange="handleFileSelect(event)" hidden>
+                                <button class="btn-secondary" onclick="document.getElementById('csvFileInput').click()">
+                                    Browse Files
+                                </button>
+                            </div>
+                            
+                            <div class="upload-info">
+                                <h4>CSV Format Requirements:</h4>
+                                <ul>
+                                    <li><strong>Required columns:</strong> name, phone</li>
+                                    <li><strong>Optional columns:</strong> email, context, priority</li>
+                                    <li><strong>Example context:</strong> "Previous customer interested in premium package"</li>
+                                    <li><strong>Phone format:</strong> +1234567890 (include country code)</li>
+                                </ul>
+                            </div>
+
+                            <div class="list-naming">
+                                <label for="listName">Contact List Name:</label>
+                                <input type="text" id="listName" placeholder="Enter list name (e.g., 'Q1 Prospects')" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-secondary" onclick="closeUploadModal()">Cancel</button>
+                        <button class="btn-primary" onclick="uploadContacts()" id="uploadBtn" disabled>
+                            <i class="fas fa-upload"></i> Upload Contacts
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Contact Modal -->
+            <div id="addContactModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2><i class="fas fa-user-plus"></i> Add Contact</h2>
+                        <span class="close" onclick="closeAddContactModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <div class="contact-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="contactName">Full Name *</label>
+                                    <input type="text" id="contactName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="contactPhone">Phone Number *</label>
+                                    <input type="tel" id="contactPhone" placeholder="+1234567890" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="contactEmail">Email</label>
+                                    <input type="email" id="contactEmail">
+                                </div>
+                                <div class="form-group">
+                                    <label for="contactPriority">Priority</label>
+                                    <select id="contactPriority">
+                                        <option value="low">Low</option>
+                                        <option value="medium" selected>Medium</option>
+                                        <option value="high">High</option>
+                                        <option value="urgent">Urgent</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="contactContext">Context/Notes</label>
+                                <textarea id="contactContext" rows="3" placeholder="Previous interactions, interests, specific context for this contact..."></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="contactList">Add to List</label>
+                                <select id="contactList">
+                                    <option value="">Select a list or create new</option>
+                                </select>
+                                <input type="text" id="newListName" placeholder="Or enter new list name" style="margin-top: 0.5rem;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-secondary" onclick="closeAddContactModal()">Cancel</button>
+                        <button class="btn-primary" onclick="addContact()">
+                            <i class="fas fa-save"></i> Add Contact
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create Campaign Modal -->
+            <div id="createCampaignModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2><i class="fas fa-bullhorn"></i> Create Call Campaign</h2>
+                        <span class="close" onclick="closeCampaignModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <div class="campaign-form">
+                            <div class="form-group">
+                                <label for="campaignName">Campaign Name *</label>
+                                <input type="text" id="campaignName" placeholder="e.g., Q1 Sales Outreach" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="campaignContactList">Contact List *</label>
+                                <select id="campaignContactList" required>
+                                    <option value="">Select contact list</option>
+                                </select>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="campaignAgent">Agent Configuration</label>
+                                    <input type="text" id="campaignAgent" placeholder="Sales Assistant Sarah" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="campaignGoal">Campaign Goal</label>
+                                    <select id="campaignGoal">
+                                        <option value="lead_generation">Lead Generation</option>
+                                        <option value="appointment_booking">Appointment Booking</option>
+                                        <option value="customer_survey">Customer Survey</option>
+                                        <option value="follow_up">Follow-up Call</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="campaignScript">Agent Instructions/Script *</label>
+                                <textarea id="campaignScript" rows="5" placeholder="Describe how the agent should behave and what it should accomplish..." required></textarea>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="campaignDelay">Delay Between Calls (seconds)</label>
+                                    <input type="number" id="campaignDelay" value="30" min="10" max="300">
+                                </div>
+                                <div class="form-group">
+                                    <label for="campaignRetries">Max Retries per Contact</label>
+                                    <input type="number" id="campaignRetries" value="2" min="0" max="5">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="campaignSchedule"> Schedule for later
+                                </label>
+                                <input type="datetime-local" id="campaignStartTime" style="display: none; margin-top: 0.5rem;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-secondary" onclick="closeCampaignModal()">Cancel</button>
+                        <button class="btn-primary" onclick="createCampaign()">
+                            <i class="fas fa-rocket"></i> Start Campaign
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Call Detail Modal -->
+            <div id="callModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2><i class="fas fa-phone-volume"></i> Call Details</h2>
+                        <span class="close" onclick="closeModal()">&times;</span>
+                    </div>
+                    
+                    <div class="modal-body">
+                        <!-- Call Summary -->
+                        <div class="detail-section">
+                            <h3><i class="fas fa-info-circle"></i> Call Summary</h3>
+                            <div class="summary-grid">
+                                <div class="summary-item">
+                                    <label>Customer Name:</label>
+                                    <input type="text" id="customerName" placeholder="Enter customer name">
+                                </div>
+                                <div class="summary-item">
+                                    <label>Phone Number:</label>
+                                    <span id="customerPhone"></span>
+                                </div>
+                                <div class="summary-item">
+                                    <label>Call Duration:</label>
+                                    <span id="callDuration"></span>
+                                </div>
+                                <div class="summary-item">
+                                    <label>Call Status:</label>
+                                    <span id="callStatus" class="status-badge"></span>
+                                </div>
+                                <div class="summary-item">
+                                    <label>Date & Time:</label>
+                                    <span id="callDateTime"></span>
+                                </div>
+                                <div class="summary-item">
+                                    <label>Agent:</label>
+                                    <span id="agentName"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Main Summary -->
+                        <div class="detail-section">
+                            <h3><i class="fas fa-file-alt"></i> Main Summary</h3>
+                            <textarea id="mainSummary" placeholder="Enter the main points discussed during the call..." rows="4"></textarea>
+                        </div>
+
+                        <!-- Call Outcome -->
+                        <div class="detail-section">
+                            <h3><i class="fas fa-target"></i> Call Outcome</h3>
+                            <div class="outcome-grid">
+                                <div class="outcome-item">
+                                    <label>Outcome:</label>
+                                    <select id="callOutcome">
+                                        <option value="">Select outcome</option>
+                                        <option value="sale_closed">Sale Closed</option>
+                                        <option value="appointment_scheduled">Appointment Scheduled</option>
+                                        <option value="follow_up_needed">Follow-up Needed</option>
+                                        <option value="not_interested">Not Interested</option>
+                                        <option value="callback_requested">Callback Requested</option>
+                                        <option value="information_provided">Information Provided</option>
+                                    </select>
+                                </div>
+                                <div class="outcome-item">
+                                    <label>Priority:</label>
+                                    <select id="callPriority">
+                                        <option value="low">Low</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="high">High</option>
+                                        <option value="urgent">Urgent</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Next Actions -->
+                        <div class="detail-section">
+                            <h3><i class="fas fa-tasks"></i> Next Actions</h3>
+                            <div class="actions-container">
+                                <textarea id="nextActions" placeholder="What are the next steps to take with this lead/customer?" rows="3"></textarea>
+                                <div class="action-date">
+                                    <label>Follow-up Date:</label>
+                                    <input type="date" id="followupDate">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Call Transcription -->
+                        <div class="detail-section">
+                            <h3><i class="fas fa-microphone"></i> Call Transcription</h3>
+                            <div class="transcription-container">
+                                <div class="transcription-header">
+                                    <button class="btn-secondary" onclick="exportTranscription()">
+                                        <i class="fas fa-download"></i> Export
+                                    </button>
+                                    <button class="btn-secondary" onclick="searchTranscription()">
+                                        <i class="fas fa-search"></i> Search
+                                    </button>
+                                </div>
+                                <div class="transcription-content" id="transcriptionContent">
+                                    <!-- Transcription will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tags -->
+                        <div class="detail-section">
+                            <h3><i class="fas fa-tags"></i> Tags</h3>
+                            <div class="tags-container">
+                                <input type="text" id="tagInput" placeholder="Add tags (press Enter)">
+                                <div class="tags-list" id="tagsList">
+                                    <!-- Tags will appear here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+                        <button class="btn-primary" onclick="saveCallData()">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast" class="toast"></div>
+
+    <script src="dashboard-script.js"></script>
+</body>
+</html>
